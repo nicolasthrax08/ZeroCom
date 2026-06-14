@@ -1,63 +1,39 @@
-import express from 'express';
-import { z } from 'zod';
-import researchFixtures from '../data/researchFixtures.js';
+import express from "express";
+import { z } from "zod";
+import { TRENDS, DISTRICTS, COMPARABLES } from "../data/researchFixtures.js";
 
 const router = express.Router();
 
-const TrendsSchema = z.object({
+const trendsQuery = z.object({
   city: z.string().min(1),
-  district: z.string().optional(),
-  months: z.string().optional(),
+  district: z.string().min(1).optional(),
+  months: z.coerce.number().int().min(1).max(24).default(6),
 });
 
-const DistrictsSchema = z.object({
-  city: z.string().min(1),
+router.get("/trends", (req, res) => {
+  const parsed = trendsQuery.safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ error: "VALIDATION_ERROR", issues: parsed.error.issues });
+  const { city, district, months } = parsed.data;
+  const data = TRENDS.filter(t => t.city === city && (!district || t.district === district)).slice(-months);
+  res.json({ city, district: district || null, months: data.length, data });
 });
 
-const ComparablesSchema = z.object({
-  listingId: z.string().min(1),
+const districtsQuery = z.object({ city: z.string().min(1) });
+
+router.get("/districts", (req, res) => {
+  const parsed = districtsQuery.safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ error: "VALIDATION_ERROR", issues: parsed.error.issues });
+  const data = DISTRICTS.filter(d => d.city === parsed.data.city);
+  res.json({ city: parsed.data.city, count: data.length, data });
 });
 
-router.get('/trends', (req, res) => {
-  const result = TrendsSchema.safeParse(req.query);
-  if (!result.success) {
-    return res.status(400).json({ errors: result.error.issues });
-  }
+const comparablesQuery = z.object({ listingId: z.string().min(1) });
 
-  const { city } = result.data;
-  const data = researchFixtures.trends[city];
-  if (!data) {
-    return res.status(404).json({ error: 'City not found in research data' });
-  }
-  res.json(data);
-});
-
-router.get('/districts', (req, res) => {
-  const result = DistrictsSchema.safeParse(req.query);
-  if (!result.success) {
-    return res.status(400).json({ errors: result.error.issues });
-  }
-
-  const { city } = result.data;
-  const data = researchFixtures.districts[city];
-  if (!data) {
-    return res.status(404).json({ errors: 'City not found in research data' });
-  }
-  res.json(data);
-});
-
-router.get('/comparables', (req, res) => {
-  const result = ComparablesSchema.safeParse(req.query);
-  if (!result.success) {
-    return res.status(400).json({ errors: result.error.issues });
-  }
-
-  const { listingId } = result.data;
-  const data = researchFixtures.comparables[listingId];
-  if (!data) {
-    return res.status(404).json({ error: 'Listing not found in research data' });
-  }
-  res.json(data);
+router.get("/comparables", (req, res) => {
+  const parsed = comparablesQuery.safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ error: "VALIDATION_ERROR", issues: parsed.error.issues });
+  const data = COMPARABLES.filter(c => c.listingId === parsed.data.listingId);
+  res.json({ listingId: parsed.data.listingId, count: data.length, data });
 });
 
 export default router;

@@ -1,15 +1,17 @@
 {
   "name": "zerocom",
   "version": "1.0.0",
-  "description": "ZeroCom API server",
+  "description": "ZeroCom API server — peer-to-peer real estate marketplace",
   "type": "module",
   "main": "src/api/server.js",
   "scripts": {
-    "dev": "node --watch src/api/server.js",
     "start": "node src/api/server.js",
+    "dev": "node --watch src/api/server.js",
+    "research": "node src/api-research/server.js",
     "test:otp": "node scripts/test-otp.js",
     "test:auth": "node scripts/test-auth-flow.js",
-    "test:listings": "node scripts/test-listings.js"
+    "test:listings": "node scripts/test-listings.js",
+    "test:all": "node scripts/test-otp.js && node scripts/test-auth-flow.js && node scripts/test-listings.js"
   },
   "dependencies": {
     "alipay-sdk": "^3.9.0",
@@ -18,10 +20,10 @@
     "express": "^4.19.2",
     "helmet": "^7.0.0",
     "ioredis": "^5.11.1",
-    "jsonwebtoken": "^9.0.0",
-    "nanoid": "^5.0.0",
-    "pino": "^9.0.0",
-    "pino-http": "^10.0.0",
-    "zod": "^3.23.0"
+    "jsonwebtoken": "^9.0.2",
+    "nanoid": "^3.3.7",
+    "pino": "^9.4.0",
+    "pino-http": "^10.3.0",
+    "zod": "^4.4.3"
   }
 }

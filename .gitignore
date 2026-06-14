@@ -1,16 +1,25 @@
 # Dependencies
 node_modules/
 
-# Environment variables
+# Environment
 .env
+.env.local
 
 # Logs
 logs/
 *.log
+npm-debug.log*
 
-# OS-specific files
+# OS
 .DS_Store
 Thumbs.db
 
-# Testing
+# Build artifacts
+dist/
+build/
 coverage/
+
+# Editor
+.vscode/
+.idea/
+*.swp
