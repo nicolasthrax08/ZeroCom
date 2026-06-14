@@ -1,0 +1,50 @@
+// Static in-memory fixtures. Phase 2 will replace with real data pipeline.
+export const TRENDS = [
+  { city: "Shanghai", district: "Pudong",   month: "2026-01", medianPriceWan: 850, listingCount: 1240 },
+  { city: "Shanghai", district: "Pudong",   month: "2026-02", medianPriceWan: 858, listingCount: 1310 },
+  { city: "Shanghai", district: "Pudong",   month: "2026-03", medianPriceWan: 865, listingCount: 1380 },
+  { city: "Shanghai", district: "Pudong",   month: "2026-04", medianPriceWan: 870, listingCount: 1420 },
+  { city: "Shanghai", district: "Pudong",   month: "2026-05", medianPriceWan: 872, listingCount: 1455 },
+  { city: "Shanghai", district: "Pudong",   month: "2026-06", medianPriceWan: 878, listingCount: 1500 },
+  { city: "Shanghai", district: "Xuhui",    month: "2026-01", medianPriceWan: 920, listingCount: 880 },
+  { city: "Shanghai", district: "Xuhui",    month: "2026-02", medianPriceWan: 925, listingCount: 910 },
+  { city: "Shanghai", district: "Xuhui",    month: "2026-03", medianPriceWan: 932, listingCount: 945 },
+  { city: "Shanghai", district: "Xuhui",    month: "2026-04", medianPriceWan: 940, listingCount: 980 },
+  { city: "Shanghai", district: "Xuhui",    month: "2026-05", medianPriceWan: 945, listingCount: 1010 },
+  { city: "Shanghai", district: "Xuhui",    month: "2026-06", medianPriceWan: 950, listingCount: 1040 },
+  { city: "Beijing",  district: "Chaoyang", month: "2026-01", medianPriceWan: 1050, listingCount: 1100 },
+  { city: "Beijing",  district: "Chaoyang", month: "2026-02", medianPriceWan: 1055, listingCount: 1120 },
+  { city: "Beijing",  district: "Chaoyang", month: "2026-03", medianPriceWan: 1060, listingCount: 1145 },
+  { city: "Beijing",  district: "Chaoyang", month: "2026-04", medianPriceWan: 1068, listingCount: 1170 },
+  { city: "Beijing",  district: "Chaoyang", month: "2026-05", medianPriceWan: 1075, listingCount: 1190 },
+  { city: "Beijing",  district: "Chaoyang", month: "2026-06", medianPriceWan: 1080, listingCount: 1210 },
+  { city: "Shenzhen", district: "Nanshan",  month: "2026-01", medianPriceWan: 980, listingCount: 720 },
+  { city: "Shenzhen", district: "Nanshan",  month: "2026-02", medianPriceWan: 985, listingCount: 740 },
+  { city: "Shenzhen", district: "Nanshan",  month: "2026-03", medianPriceWan: 992, listingCount: 760 },
+  { city: "Shenzhen", district: "Nanshan",  month: "2026-04", medianPriceWan: 998, listingCount: 780 },
+  { city: "Shenzhen", district: "Nanshan",  month: "2026-05", medianPriceWan: 1005, listingCount: 800 },
+  { city: "Shenzhen", district: "Nanshan",  month: "2026-06", medianPriceWan: 1012, listingCount: 820 },
+];
+
+export const DISTRICTS = [
+  { city: "Shanghai", district: "Pudong",   medianPriceWan: 878, yoyChange: 0.032 },
+  { city: "Shanghai", district: "Xuhui",    medianPriceWan: 950, yoyChange: 0.041 },
+  { city: "Shanghai", district: "Jingan",   medianPriceWan: 1050, yoyChange: 0.025 },
+  { city: "Shanghai", district: "Huangpu",  medianPriceWan: 1180, yoyChange: 0.018 },
+  { city: "Beijing",  district: "Chaoyang", medianPriceWan: 1080, yoyChange: 0.029 },
+  { city: "Beijing",  district: "Haidian",  medianPriceWan: 1250, yoyChange: 0.045 },
+  { city: "Beijing",  district: "Dongcheng",medianPriceWan: 1450, yoyChange: 0.012 },
+  { city: "Shenzhen", district: "Nanshan",  medianPriceWan: 1012, yoyChange: 0.038 },
+  { city: "Shenzhen", district: "Futian",   medianPriceWan: 1320, yoyChange: 0.022 },
+  { city: "Shenzhen", district: "Luohu",    medianPriceWan: 720,  yoyChange: -0.005 },
+];
+
+export const COMPARABLES = [
+  { listingId: "L001", address: "Pudong Ave 100",   priceWan: 880, similarityScore: 0.92 },
+  { listingId: "L001", address: "Pudong Ave 200",   priceWan: 895, similarityScore: 0.88 },
+  { listingId: "L001", address: "Pudong South Rd 50", priceWan: 850, similarityScore: 0.81 },
+  { listingId: "L002", address: "Xuhui Park 12",    priceWan: 960, similarityScore: 0.94 },
+  { listingId: "L002", address: "Xuhui Park 18",    priceWan: 945, similarityScore: 0.89 },
+  { listingId: "L003", address: "Chaoyang CBD 8",   priceWan: 1090, similarityScore: 0.95 },
+  { listingId: "L003", address: "Chaoyang CBD 22",  priceWan: 1075, similarityScore: 0.91 },
+];
