@@ -5,6 +5,7 @@ import authRouter from "./routes/auth.js";
 import { rateLimit } from "./middleware/rateLimit.js";
 import { requestId } from "./middleware/requestId.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import listingsRouter from "./routes/listings.js";
 
 const app = express();
 app.use(express.json());
@@ -32,6 +33,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use(errorHandler);
+app.use('/api/listings', listingsRouter);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`ZeroCom API running on port ${PORT}`));

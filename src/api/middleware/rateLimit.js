@@ -1,39 +1,32 @@
-import Redis from "ioredis";
+import redis from './_rateLimitRedis.js';
 
-const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
-  maxRetriesPerRequest: 1,
-  connectTimeout: 500,
-});
-
-redis.on("error", (err) => {
-  console.warn("Redis connection error (Rate Limiter failing open):", err.message);
-});
-
-export const rateLimit = ({ windowMs, max, keyFn }) => {
+export const rateLimit = ({ windowMs, max, keyFn = (req) => req.ip, routeName = 'global' }) => {
   return async (req, res, next) => {
     const id = keyFn(req);
-    const windowStart = Math.floor(Date.now() / windowMs) * windowMs;
-    const key = `rl:${req.route?.path || req.path}:${id}:${windowStart}`;
+    const now = Date.now();
+    const windowStart = Math.floor(now / windowMs) * windowMs;
+    const key = `rl:${routeName}:${id}:${windowStart}`;
 
     try {
-      const current = await redis.incr(key);
-      if (current === 1) {
-        await redis.expire(key, Math.ceil(windowMs / 1000));
+      const count = await redis.incr(key);
+
+      if (count === 1) {
+        await redis.expire(key, Math.ceil(windowMs / 1000) + 1);
       }
 
-      if (current > max) {
-        const ttl = Math.ceil((windowStart + windowMs - Date.now()) / 1000);
+      if (count > max) {
+        res.setHeader('Retry-After', Math.ceil(windowMs / 1000));
         return res.status(429).json({
-          error: "RATE_LIMITED",
-          retryAfter: ttl,
+          error: 'RATE_LIMITED',
+          retryAfter: Math.ceil(windowMs / 1000),
         });
       }
+
       next();
     } catch (err) {
-      // Fail open: allow request if Redis is down, but log the failure
+      // Fail open to avoid blocking requests if Redis is down
+      console.error('Rate limit Redis error:', err);
       next();
     }
   };
 };
-
-export { redis };
