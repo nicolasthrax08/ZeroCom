@@ -15,5 +15,26 @@
     "express": "^5.2.1",
     "helmet": "^8.2.0",
     "zod": "^4.4.3"
+  "name": "zerocom-research-server",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "helmet": "^7.0.0",
+    "ioredis": "^5.11.1",
+    "zod": "^4.4.3"
+  "name": "zerocom",
+  "version": "1.0.0",
+  "description": "ZeroCom API server",
+  "type": "module",
+  "main": "src/api/server.js",
+  "scripts": {
+    "start": "node src/api/server.js"
+  },
+  "dependencies": {
+    "alipay-sdk": "^3.9.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
   }
 }
