@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import authRouter from "./routes/auth.js";
 import { rateLimit } from "./middleware/rateLimit.js";
+import listingsRouter from "./routes/listings.js";
 
 const app = express();
 app.use(express.json());
@@ -22,6 +23,8 @@ app.use(
 app.get("/api/health", (req, res) => {
   res.json({ status: "active", workspace: "Session B (Auth)" });
 });
+
+app.use('/api/listings', listingsRouter);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Auth Server running on port ${PORT}`));
