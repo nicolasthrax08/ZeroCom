@@ -9,11 +9,13 @@ import authRouter from "./routes/auth.js";
 import { rateLimit } from "./middleware/rateLimit.js";
 import listingsRouter from "./routes/listings.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { requestId } from "./middleware/requestId.js";
 
-const logger = pino({ transport: { target: "pino-pretty" } });
+const logger = pino({ level: process.env.LOG_LEVEL || "info" });
 
 const app = express();
 
+app.use(requestId);
 app.use(express.json());
 app.use(cors({ origin: process.env.CORS_ORIGINS?.split(",") || "*" }));
 app.use(helmet());
