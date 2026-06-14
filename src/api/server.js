@@ -3,11 +3,19 @@ import cors from "cors";
 import helmet from "helmet";
 import authRouter from "./routes/auth.js";
 import { rateLimit } from "./middleware/rateLimit.js";
+import { requestId } from "./middleware/requestId.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
+
+app.use(requestId);
+// Placeholder for future pino-http middleware
+app.use((req, res, next) => {
+  next();
+});
 
 app.use(
   "/api/auth",
@@ -20,8 +28,10 @@ app.use(
 );
 
 app.get("/api/health", (req, res) => {
-  res.json({ status: "active", workspace: "Session B (Auth)" });
+  res.json({ status: "active", service: "zerocom-api", version: "1.0.0", requestId: req.id });
 });
 
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Auth Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`ZeroCom API running on port ${PORT}`));
