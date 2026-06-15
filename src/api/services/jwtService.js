@@ -1,6 +1,9 @@
 import jwt from "jsonwebtoken";
 
-const SECRET = process.env.JWT_SECRET || "dev-only-secret-do-not-use-in-prod";
+const SECRET = process.env.JWT_SECRET;
+if (!SECRET) {
+  throw new Error("JWT_SECRET environment variable is required. Set it in .env or environment variables.");
+}
 const TTL_SECONDS = 15 * 60;
 
 export function signAccessToken({ userId, tier }) {
