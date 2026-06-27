@@ -1,0 +1,9 @@
+node_modules/
+.next/
+out/
+.env
+.env.local
+*.db
+*.sqlite
+coverage/
+.DS_Store
