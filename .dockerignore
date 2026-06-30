@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.env
+.env.local
+.env.production
+*.db
+*.sqlite
+coverage
+.DS_Store
+*.tsbuildinfo
+docs

@@ -1,0 +1,440 @@
+// ZeroCom Prisma schema — PostgreSQL
+// Production persistence layer replacing the in-memory store.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PHONE_ONLY
+  ID_PENDING
+  ID_VERIFIED
+  ID_REJECTED
+  CHALLENGE_REQUIRED
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING_VERIFICATION
+  ACTIVE
+  PAUSED
+  SOLD
+  REMOVED
+}
+
+enum ListingVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum PropertyType {
+  SECOND_HAND
+  NEW
+  RENTAL
+}
+
+enum SubscriptionPlanCode {
+  FREE
+  MONTHLY_PRO
+  ANNUAL_PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  ALIPAY
+  WECHATPAY
+}
+
+enum PaymentOrderStatus {
+  CREATED
+  PENDING_USER_PAY
+  PAID
+  EXPIRED
+  CANCELLED
+  REFUNDED
+}
+
+enum BrokerSignalSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum EnforcementType {
+  SOFT_WARNING
+  VERIFICATION_CHALLENGE
+  SHADOW_BAN
+  HARD_BAN
+  LISTING_PURGE
+}
+
+enum ReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+model User {
+  id               String         @id @default(uuid())
+  phoneEncrypted   String         @map("phone_encrypted")
+  phoneHash        String         @unique @map("phone_hash")
+  displayName      String?        @map("display_name")
+  role             UserRole       @default(USER)
+  isShadowBanned   Boolean        @default(false) @map("is_shadow_banned")
+  isHardBanned     Boolean        @default(false) @map("is_hard_banned")
+  termsAcceptedAt  DateTime?      @map("terms_accepted_at")
+  privacyAcceptedAt DateTime?     @map("privacy_accepted_at")
+  totpSecret       String?        @map("totp_secret")
+  totpEnabled      Boolean        @default(false) @map("totp_enabled")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  verification     UserVerification?
+  devices          DeviceFingerprint[]
+  listings         Listing[]
+  listingViews     ListingView[]
+  savedListings    SavedListing[]
+  contactReveals   ContactReveal[]
+  subscriptions     Subscription[]
+  paymentOrders     PaymentOrder[]
+  conversationsAsBuyer  Conversation[] @relation("buyer")
+  conversationsAsSeller Conversation[] @relation("seller")
+  messagesSent     Message[]      @relation("sender")
+  brokerSignals    BrokerSignal[]
+  enforcements     EnforcementAction[]
+  reportsFiled     Report[]       @relation("reporter")
+  appeals          Appeal[]
+  auditLogs        AuditLog[]
+  sessions         Session[]
+
+  @@map("users")
+}
+
+model UserVerification {
+  id             String              @id @default(uuid())
+  userId         String              @unique @map("user_id")
+  status         VerificationStatus  @default(ID_PENDING)
+  realNameHash   String?             @map("real_name_hash")
+  idCardHash     String?             @unique @map("id_card_hash")
+  idCardFrontUrl String?             @map("id_card_front_url")
+  ocrProvider    String?             @map("ocr_provider")
+  reviewedAt     DateTime?           @map("reviewed_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_verifications")
+}
+
+model DeviceFingerprint {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  deviceId  String   @map("device_id")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("device_fingerprints")
+}
+
+model Listing {
+  id                   String                    @id @default(uuid())
+  sellerId             String                    @map("seller_id")
+  title                String
+  description          String
+  city                 String
+  district             String
+  addressDetail        String                    @map("address_detail")
+  lat                  Float?
+  lng                  Float?
+  geoHash               String?                   @map("geo_hash")
+  priceRmbWan          Int                       @map("price_rmb_wan")
+  areaSqm              Int                       @map("area_sqm")
+  bedrooms             Int
+  bathrooms            Int
+  propertyType         PropertyType              @map("property_type")
+  verificationStatus   ListingVerificationStatus @default(PENDING) @map("verification_status")
+  status               ListingStatus             @default(DRAFT)
+  publishedAt          DateTime?                 @map("published_at")
+  createdAt            DateTime                  @default(now()) @map("created_at")
+  updatedAt            DateTime                  @updatedAt @map("updated_at")
+
+  seller       User            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  photos       ListingPhoto[]
+  views        ListingView[]
+  saved        SavedListing[]
+  reveals      ContactReveal[]
+  conversations Conversation[]
+  reports      Report[]
+  brokerSignals BrokerSignal[]
+
+  @@index([sellerId])
+  @@index([city, district])
+  @@index([status])
+  @@map("listings")
+}
+
+model ListingPhoto {
+  id        String   @id @default(uuid())
+  listingId String   @map("listing_id")
+  url       String
+  pHash     String?  @map("p_hash")
+  sortOrder Int      @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+  @@map("listing_photos")
+}
+
+model ListingView {
+  id           String    @id @default(uuid())
+  userId       String?   @map("user_id")
+  listingId    String    @map("listing_id")
+  businessDate String    @map("business_date")
+  counted      Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  listing Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([userId, businessDate])
+  @@map("listing_views")
+}
+
+model SavedListing {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  listingId String   @map("listing_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@map("saved_listings")
+}
+
+model ContactReveal {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  listingId String   @map("listing_id")
+  revealType String   @map("reveal_type")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@map("contact_reveals")
+}
+
+model Subscription {
+  id        String             @id @default(uuid())
+  userId    String             @map("user_id")
+  planCode  SubscriptionPlanCode @map("plan_code")
+  status    SubscriptionStatus @default(ACTIVE)
+  startsAt  DateTime           @map("starts_at")
+  endsAt    DateTime           @map("ends_at")
+  autoRenew Boolean            @default(false) @map("auto_renew")
+  createdAt DateTime           @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("subscriptions")
+}
+
+model PaymentOrder {
+  outTradeNo       String              @id @map("out_trade_no")
+  userId           String              @map("user_id")
+  provider         PaymentProvider
+  planCode         SubscriptionPlanCode @map("plan_code")
+  amountFen        Int                 @map("amount_fen")
+  status           PaymentOrderStatus  @default(CREATED)
+  expiresAt        DateTime            @map("expires_at")
+  paidAt           DateTime?           @map("paid_at")
+  providerPayload  Json?               @map("provider_payload")
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  auditLogs       PaymentAuditLog[]
+
+  @@index([userId])
+  @@map("payment_orders")
+}
+
+model PaymentAuditLog {
+  id        String   @id @default(uuid())
+  orderId   String   @map("order_id")
+  eventType String   @map("event_type")
+  payload   Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  order PaymentOrder @relation(fields: [orderId], references: [outTradeNo], onDelete: Cascade)
+
+  @@map("payment_audit_logs")
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  listingId String   @map("listing_id")
+  buyerId   String   @map("buyer_id")
+  sellerId  String   @map("seller_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer   User    @relation("buyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller  User    @relation("seller", fields: [sellerId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([listingId, buyerId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String   @map("conversation_id")
+  senderId       String   @map("sender_id")
+  body           String
+  isFlagged      Boolean  @default(false) @map("is_flagged")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+model BrokerSignal {
+  id          String              @id @default(uuid())
+  userId      String?             @map("user_id")
+  listingId   String?             @map("listing_id")
+  signalType  String              @map("signal_type")
+  severity    BrokerSignalSeverity
+  score       Int
+  metadata    Json?
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  listing Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("broker_signals")
+}
+
+model EnforcementAction {
+  id        String          @id @default(uuid())
+  userId    String          @map("user_id")
+  type      EnforcementType
+  reason    String
+  metadata  Json?
+  createdBy String?         @map("created_by")
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appeals Appeal[]
+
+  @@index([userId])
+  @@map("enforcement_actions")
+}
+
+model Report {
+  id             String        @id @default(uuid())
+  reporterId     String        @map("reporter_id")
+  listingId      String?       @map("listing_id")
+  reportedUserId String?       @map("reported_user_id")
+  reason         String
+  details        String?
+  status         ReportStatus   @default(OPEN)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  resolvedAt     DateTime?     @map("resolved_at")
+
+  reporter User  @relation("reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  listing  Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@index([reporterId])
+  @@index([status])
+  @@map("reports")
+}
+
+model Appeal {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  enforcementId  String    @map("enforcement_id")
+  reason         String
+  supportingText String?   @map("supporting_text")
+  status         String    @default("OPEN")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  resolvedAt     DateTime? @map("resolved_at")
+
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enforcement EnforcementAction @relation(fields: [enforcementId], references: [id], onDelete: Cascade)
+
+  @@map("appeals")
+}
+
+model OtpSession {
+  phoneHash  String   @id @map("phone_hash")
+  otp        String
+  phone      String
+  attempts   Int      @default(0)
+  expiresAt  DateTime @map("expires_at")
+  lastSentAt DateTime @map("last_sent_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("otp_sessions")
+}
+
+model Session {
+  token      String   @id
+  userId     String   @map("user_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?  @map("actor_id")
+  action    String
+  target    String?
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@map("audit_logs")
+}

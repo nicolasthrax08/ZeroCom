@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    env:
+      # Dummy DATABASE_URL so build doesn't fail if any code reads it at compile time.
+      # No real Postgres is needed — tests are pure unit tests (no DB access).
+      DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public
+      NEXTAUTH_SECRET: ci-test-secret-that-is-32-chars-long-123456
+      PHONE_HMAC_SECRET: ci-test-secret-that-is-32-chars-long-123456
+      # 32-byte base64 key for AES-256-GCM
+      ENCRYPTION_KEY: 88e5c667d+d4PdLqx1D35H6/JHQK4W+AHnjPneD6dOXm7TjUdOTE=
+      PAYMENT_MOCK_SECRET: ci-mock-secret
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run ci
