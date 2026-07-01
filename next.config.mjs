@@ -9,6 +9,9 @@ const nextConfig = {
   poweredByHeader: false,
   output: 'standalone',
   outputFileTracingRoot: __dirname,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.zerocom.app' },

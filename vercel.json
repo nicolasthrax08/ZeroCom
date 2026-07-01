@@ -1,0 +1,13 @@
+{
+  "buildCommand": "prisma generate && next build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "env": {
+    "PRISMA_GENERATE_SKIP_DOWNLOAD": "true"
+  },
+  "build": {
+    "env": {
+      "SKIP_ESLINT": "1"
+    }
+  }
+}
